@@ -1,114 +1,91 @@
-# SIGPS ML Training
+# SIGPS Machine Learning API
 
-Repositório dedicado ao treinamento, validação e exportação do modelo de Machine
-Learning do SIGPS.
+Repositório dedicado ao treinamento do modelo de Inteligência Artificial e à API de inferência do SIGPS, projetada para a classificação de prioridade de pacientes em filas de espera.
 
 ## Objetivo
 
-- Treinar o modelo de priorização (score 0..100).
-- Gerar artefatos versionáveis em `artifacts/`.
-- Exportar `model.pkl` para o `sigps-backend` (somente inferência no backend).
+- Treinar o modelo de Machine Learning (`RandomForestClassifier`) usando os dados do paciente (Idade, Comorbidades, Alergias, etc.).
+- Expor o modelo treinado através de uma **API RESTful (FastAPI)** rodando na porta 8000.
+- Classificar a prioridade clínica em Categorias (1: Normal, 2: Alta, 3: Extrema).
+- Interagir com o Backend Flask do SIGPS de forma completamente autônoma.
 
-## Setup
+## Setup e Instalação (Local ou VPS)
+
+Este serviço foi projetado para rodar isoladamente do Backend principal, consumindo as dependências necessárias para Data Science.
 
 ```bash
+# 1. Ative o ambiente virtual (pode usar o mesmo do Backend ou criar um novo)
 python -m venv .venv
-# Windows: .venv\Scripts\activate
-# Linux/Mac: source .venv/bin/activate
+
+# Windows
+.venv\Scripts\activate
+# Linux/Mac
+source .venv/bin/activate
+
+# 2. Instale as dependências
 pip install -r requirements.txt
+```
+
+## Como rodar o serviço
+
+A arquitetura atual exige que a API de ML fique executando em segundo plano.
+
+### Treinamento Inicial (Obrigatório)
+Antes de iniciar a API pela primeira vez, você **deve treinar o modelo** para que o arquivo `src/model.pkl` seja gerado.
+
+```bash
+python src/train.py
+```
+
+### Iniciando a API Localmente
+```bash
+python -m uvicorn api:app --reload --port 8000
+```
+> O serviço ficará escutando requisições em `http://127.0.0.1:8000`.
+
+### Rodando em Produção (VPS Linux)
+Para manter o serviço no ar de forma robusta, recomendamos o uso de PM2 ou Systemd:
+
+**Exemplo usando PM2:**
+```bash
+pm2 start "python -m uvicorn api:app --host 0.0.0.0 --port 8000" --name "sigps-ml"
+pm2 save
 ```
 
 ## Estrutura do repositório
 
 ```
 src/
-├── dataset.py     – carregamento e preparação dos dados brutos.
-├── features.py    – transformação / engenharia de atributos.
-├── train.py       – rotina de treinamento (fit do modelo, persistência).
-├── evaluate.py    – cálculo de métricas, gráficos e relatórios de validação.
-├── export.py      – empacota o modelo treinado em `model.pkl` e gera metadados.
-├── __pycache__/   – caches do Python.
-artifacts/
-└── ...            – pasta onde são armazenados os artefatos versionáveis
-README.md          – este guia.
-requirements.txt   – dependências do projeto.
+├── features.py    – Engenharia de atributos (mapeamento de comorbidades para One-Hot).
+├── train.py       – Rotina de treinamento (RandomForest, salvamento do pickle).
+api.py             – Servidor FastAPI que expõe o endpoint /predict.
+requirements.txt   – Dependências (FastAPI, Scikit-learn, Uvicorn).
+README.md          – Este guia.
 ```
 
-### Descrição dos módulos
+## Integração Automática com o Backend
 
-- **dataset.py**  
-  Implementa funções para ler os dados de origem (CSV, banco, API...) e
-  aplicar limpeza básica. Retorna `pandas.DataFrame` prontos para o
-  processamento.
+Na arquitetura antiga, o Backend Flask lia o arquivo `model.pkl` diretamente. Na **nova arquitetura (Microserviço)**, o processo de comunicação acontece via HTTP:
 
-- **features.py**  
-  Contém a lógica de engenharia de atributos: codificação de categóricas,
-  normalização, agregações etc. É chamado por `train.py` e por `evaluate.py`
-  para garantir que os dados são transformados de forma idêntica no treino
-  e na inferência.
-
-- **train.py**  
-  Executa o pipeline completo de treinamento. Usa `dataset.py` para carregar os
-  dados, passa pelo `features.py`, treina um `sklearn` (ou outro framework),
-  grava o objeto em `artifacts/` com número de versão e, opcionalmente, salva
-  o melhor modelo local para inspeção.
-
-- **evaluate.py**  
-  Roda métricas de desempenho (ROC‑AUC, MSE, etc.), plota curvas e gera
-  relatórios. Normalmente usado após o treino para validar se o modelo atende
-  aos critérios antes de um novo deploy.
-
-- **export.py**  
-  A partir do artefato gerado por `train.py`, empacota o modelo em
-  `model.pkl` (pickle compatível com o backend) e agrega um arquivo de
-  metadados (versão, data, features usadas). É essa saída que será
-  consumida pelo repositório do backend.
-
-## Fluxo de trabalho
-
-1. Ative o virtualenv e instale as dependências.
-2. Execute `python src/train.py` para treinar e gerar artefatos.
-3. (Opcional) `python src/evaluate.py` para ver métricas e validar o modelo.
-4. Quando satisfeito, rode `python src/export.py` para criar o `model.pkl`.
-5. Copie/commite o `model.pkl` gerado em `artifacts/` e envie para o
-   repositório `sigps-backend` ou para o pipeline de CI/CD responsável pelo
-   deploy.
-
-## Integração com o backend
-
-O backend não treina nem valida modelos; ele só faz **inferência**. O
-procedimento de integração é simples:
-
-1. O `model.pkl` exportado aqui é versionado (ex.: `artifacts/model_v1.2.3.pkl`)
-   e disponibilizado ao repositório `sigps-backend` por meio de um submódulo,
-   pacote interno, artefato do CI ou caminho de rede.
-2. No código do backend, há uma função de inicialização que carrega o modelo:
-
-   ```python
-   import pickle
-
-   with open('path/to/model.pkl', 'rb') as f:
-       model = pickle.load(f)
-
-   def score(features: dict) -> float:
-       X = preprocess(features)  # mesma lógica de features.py, simplificada
-       return model.predict_proba(X)[0, 1] * 100
+1. O Paciente preenche sua "Ficha Médica" no Frontend informando `comorbidades` e `alergias`.
+2. O Paciente faz Check-in na fila de espera.
+3. O Backend Flask envia automaticamente um `POST http://127.0.0.1:8000/predict` contendo o payload do paciente em formato JSON:
+   ```json
+   {
+       "idade": 65,
+       "comorbidades": "Diabetes, Hipertensão",
+       "alergias": "Nenhuma"
+   }
    ```
+4. A API FastAPI recebe a requisição, formata os dados usando o `features.py`, submete ao modelo carregado em memória, e devolve a resposta:
+   ```json
+   {
+       "prioridade": 3,
+       "reasoning": "Idoso (>=65 anos) com fatores de risco detectados."
+   }
+   ```
+5. O Backend Flask salva essas informações na tabela `fila_atendimento` e a Fila é reordenada na mesma hora para todos os usuários da clínica.
 
-3. O backend chama essa função sempre que precisa gerar um `score` para um
-   novo registro. O preprocess deve replicar os passos de `features.py` para
-   garantir consistência.
-
-### Observações
-
-- Não há dependência direta entre este repositório e o backend; a única
-  “ponte” é o arquivo serializado `model.pkl`.
-- Qualquer alteração na engenharia de features ou no formato de entrada deve
-  ser comunicada e sincronizada com o código do backend.
-
-Com essas informações, qualquer desenvolvedor novo consegue entender o que
-cada script faz, como rodar o treinamento e como o artefato resultante é
-utilizado pelo sistema de produção.
-
-
-
+### Observações Finais
+- As comorbidades informadas pelos pacientes são transformadas de texto livre para _features binárias_ utilizando algoritmos de NLP básicos dentro do `features.py`.
+- O paciente pode enviar documentos médicos (Laudos) via portal para validar juridicamente as comorbidades inseridas, mantendo a confiabilidade da IA.

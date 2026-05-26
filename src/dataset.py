@@ -1,55 +1,48 @@
 import numpy as np
 import pandas as pd
-
 from .features import ORDEM_FEATURES
 
-def criar_dataset(
-    caminho_csv: str = "data/raw/sigps_prod_fake.csv",
-    usar_heuristica_se_nao_tiver_y: bool = False,
-):
+def criar_dataset(n_samples: int = 1000):
     """
-    Carrega dataset real (simulado) de um CSV e devolve:
-      X: (n,4) na ordem ORDEM_FEATURES
-      y: (n,) em 0..100
-
-    Requisitos:
-      CSV deve conter colunas ORDEM_FEATURES.
-      Alvo esperado: score_prioridade (0..100).
+    Gera um dataset sintético para treinar o modelo de classificação de risco.
+    Regras de Prioridade:
+      - 3 (Extrema): Se tiver alguma comorbidade e idade >= 60, ou se tiver câncer, ou diabetes+hipertensão e idade > 50.
+      - 2 (Alta): Idosos (>= 60) sem comorbidades graves, ou < 60 com diabetes ou hipertensão.
+      - 1 (Normal): < 60 sem comorbidades.
     """
-    df = pd.read_csv(caminho_csv)
-
-    # 1) valida features
-    faltando = [c for c in ORDEM_FEATURES if c not in df.columns]
-    if faltando:
-        raise ValueError(f"CSV não possui colunas obrigatórias: {faltando}")
-
-    # 2) monta X na ordem do contrato
+    np.random.seed(42)
+    
+    idades = np.random.randint(18, 90, n_samples)
+    diabetes = np.random.choice([0, 1], n_samples, p=[0.8, 0.2])
+    hipertensao = np.random.choice([0, 1], n_samples, p=[0.7, 0.3])
+    cancer = np.random.choice([0, 1], n_samples, p=[0.95, 0.05])
+    
+    prioridades = []
+    
+    for i in range(n_samples):
+        idade = idades[i]
+        d = diabetes[i]
+        h = hipertensao[i]
+        c = cancer[i]
+        
+        if c == 1 or (idade >= 60 and (d == 1 or h == 1)) or (idade > 50 and d == 1 and h == 1):
+            prioridade = 3 # Extrema
+        elif idade >= 60 or d == 1 or h == 1:
+            prioridade = 2 # Alta
+        else:
+            prioridade = 1 # Normal
+            
+        prioridades.append(prioridade)
+        
+    df = pd.DataFrame({
+        "idade": idades,
+        "tem_diabetes": diabetes,
+        "tem_hipertensao": hipertensao,
+        "tem_cancer": cancer,
+        "prioridade": prioridades
+    })
+    
     X = df[ORDEM_FEATURES].to_numpy(dtype=np.float32)
-
-    # 3) monta y
-    if "score_prioridade" in df.columns:
-        y = df["score_prioridade"].to_numpy(dtype=np.float32)
-    else:
-        if not usar_heuristica_se_nao_tiver_y:
-            raise ValueError(
-                "CSV não tem 'score_prioridade'. "
-                "Adicione essa coluna ou chame criar_dataset(..., usar_heuristica_se_nao_tiver_y=True)."
-            )
-
-        # Heurística fallback (igual MVP) — útil para “dataset realista sem rótulo”
-        urg = X[:, 0]
-        hist_cons = X[:, 1]
-        hist_falt = X[:, 2]
-        min_fila = X[:, 3]
-        raw = urg * 18.0 + min_fila * 0.20 + hist_cons * 0.25 - hist_falt * 6.0
-        y = np.clip(raw, 0, 100).astype(np.float32)
-
-    # 4) sanidade do y
-    y = np.clip(y, 0, 100).astype(np.float32)
-
-    # 5) garantias
-    assert X.shape[1] == 4
-    assert y.shape == (X.shape[0],)
-    assert float(y.min()) >= 0.0 and float(y.max()) <= 100.0
-
+    y = df["prioridade"].to_numpy(dtype=np.int32)
+    
     return X, y
