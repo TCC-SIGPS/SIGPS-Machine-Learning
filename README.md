@@ -1,8 +1,24 @@
-# SIGPS — Machine Learning
+<div align="center">
 
-Microserviço de **Inteligência Artificial** do SIGPS. Treina e expõe um modelo **Random Forest** para classificar a **prioridade clínica** de pacientes na fila de atendimento (níveis 1, 2 e 3), consumido pelo backend Flask via HTTP.
+<img src="../docs/logo.svg" alt="Logo SIGPS" width="120">
 
-> Deploy em container: [DOCKER.md](./DOCKER.md)
+# SIGPS Machine Learning
+
+**Microserviço de IA - Random Forest para priorização clínica na fila de atendimento**
+
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E)](https://scikit-learn.org/)
+
+[README principal](../README.md) · [DOCKER.md](./DOCKER.md) · [Backend](../SIGPS-Backend/README.md) · [Frontend](../SIGPS-Frontend/README.md)
+
+**TCC** - Faculdade Metropolitana de Manaus · Orientadora: Profª Luana Magalhães Leal
+
+</div>
+
+---
+
+Treina e expõe um modelo **Random Forest** para classificar a **prioridade clínica** (níveis 1, 2 e 3), consumido pelo backend Flask via HTTP.
 
 ---
 
@@ -389,8 +405,14 @@ Projeto desenvolvido como **Trabalho de Conclusão de Curso (TCC)** pela **Facul
 
 ### Orientação
 
-**Professora orientadora:** Luana Magalhães Leal
+**Professora orientadora:** Profª Luana Magalhães Leal — Tech Manager & Profª de Tecnologia
 
 ---
 
-**SIGPS** — Trabalho de Conclusão de Curso · Classificação de prioridade clínica com Machine Learning
+<div align="center">
+
+**SIGPS** - Trabalho de Conclusão de Curso · Classificação de prioridade clínica com Machine Learning
+
+[← Voltar ao README principal](../README.md)
+
+</div>
