@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="../docs/logo.png" alt="Logo SIGPS" width="200">
+<img src="public/logo.png" alt="Logo SIGPS" width="200">
 
 # SIGPS Machine Learning
 
