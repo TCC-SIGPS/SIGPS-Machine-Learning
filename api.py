@@ -6,6 +6,8 @@ import joblib
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 
+from priority_rules import calcular_prioridade
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [SIGPS-ML] %(levelname)s %(message)s',
@@ -52,12 +54,9 @@ def health():
 @app.post('/predict')
 def predict_priority(req: PredictionRequest):
     if model is None:
-        if req.tem_cancer == 1 or (req.idade >= 60 and (req.tem_diabetes == 1 or req.tem_hipertensao == 1)):
-            prioridade = 3
-        elif req.idade >= 60 or req.tem_diabetes == 1 or req.tem_hipertensao == 1:
-            prioridade = 2
-        else:
-            prioridade = 1
+        prioridade = calcular_prioridade(
+            req.idade, req.tem_diabetes, req.tem_hipertensao, req.tem_cancer
+        )
         logger.info(
             'predict fallback org=%s idade=%s diabetes=%s hipertensao=%s cancer=%s -> %s',
             req.organization_id, req.idade, req.tem_diabetes, req.tem_hipertensao, req.tem_cancer, prioridade,

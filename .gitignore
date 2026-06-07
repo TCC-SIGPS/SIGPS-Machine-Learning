@@ -20,3 +20,6 @@ data/processed/*
 .DS_Store
 .vscode/
 .idea/
+
+# Deploy VPS (credenciais locais)
+scripts/deploy.env

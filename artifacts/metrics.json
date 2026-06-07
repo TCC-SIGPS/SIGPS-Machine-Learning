@@ -1,5 +1,58 @@
 {
   "accuracy": 1.0,
+  "f1_macro": 1.0,
+  "f1_weighted": 1.0,
+  "recall_extrema": 1.0,
+  "confusion_matrix": [
+    [
+      57,
+      0,
+      0
+    ],
+    [
+      0,
+      89,
+      0
+    ],
+    [
+      0,
+      0,
+      54
+    ]
+  ],
+  "classification_report": {
+    "Normal": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 57.0
+    },
+    "Alta": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 89.0
+    },
+    "Extrema": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 54.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 200.0
+    }
+  },
   "ordem_features": [
     "idade",
     "tem_diabetes",
@@ -7,7 +60,40 @@
     "tem_cancer",
     "organization_id"
   ],
-  "n_treino": 1600,
-  "n_teste": 400,
-  "modelo": "RandomForestClassifier"
+  "n_treino": 800,
+  "n_teste": 200,
+  "n_total": 1000,
+  "modelo": "RandomForestClassifier",
+  "classes": [
+    1,
+    2,
+    3
+  ],
+  "dataset": {
+    "nome": "SIGPS Demo Cohort \u2014 1000 pacientes (estudo ML)",
+    "fonte": "Banco SIGPS \u2014 Cl\u00ednica Demo Fila IA (seed scripts/seed_ml_study_cohort.py)",
+    "clinica": "Cl\u00ednica Demo Fila IA",
+    "organization_id": 5,
+    "n_amostras": 1000,
+    "senha_padrao": "TesteFila@2026",
+    "email_padrao": "ml.study.0001@sigps.test \u2026 ml.study.1000@sigps.test",
+    "variaveis": {
+      "idade": "data_nascimento na ficha (Paciente)",
+      "tem_diabetes": "comorbidade diabetes (flags_prioridade_clinica)",
+      "tem_hipertensao": "comorbidade hipertensao",
+      "tem_cancer": "comorbidade cancer"
+    },
+    "rotulo_prioridade": "Protocolo SIGPS (src/priority_rules.py)",
+    "distribuicao_prioridade": {
+      "1": 287,
+      "2": 444,
+      "3": 269
+    },
+    "prevalencia_comorbidades": {
+      "diabetes": 0.171,
+      "hipertensao": 0.357,
+      "cancer": 0.098
+    },
+    "seed_rng": 42
+  }
 }
