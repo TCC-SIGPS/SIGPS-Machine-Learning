@@ -6,6 +6,7 @@ COPY requirements-prod.txt .
 RUN pip install --no-cache-dir -r requirements-prod.txt
 
 COPY api.py .
+COPY priority_rules.py .
 COPY artifacts/ ./artifacts/
 
 ENV PYTHONUNBUFFERED=1

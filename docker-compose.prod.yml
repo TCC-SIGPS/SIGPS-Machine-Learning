@@ -9,6 +9,9 @@ services:
     restart: always
     expose:
       - "8000"
+    volumes:
+      # Atualize o modelo na VPS sem rebuild: copie model.pkl e reinicie o container
+      - ./artifacts/model.pkl:/app/artifacts/model.pkl:ro
     networks:
       - sigps-network
     healthcheck:
